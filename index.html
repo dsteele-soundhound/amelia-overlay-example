@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amelia Chat Overlay Demo with Carousel</title>
+    <link rel="stylesheet" href="src/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --tm-blue:#024DDF;
+            --tm-dark:#0A0A0A;
+            --tm-dark-alt:#111923;
+            --tm-mid:#1d2731;
+            --tm-gray:#f5f7fa;
+            --tm-card:#ffffff;
+        }
+        body.ticketmaster-theme {
+            font-family: 'Averta', 'Inter', 'Open Sans', Arial, sans-serif;
+            background:var(--tm-gray);
+            color:#0f1418;
+            margin:0;
+        }
+        /* Header */
+        .tm-header {
+            background:var(--tm-dark);
+            border-bottom:1px solid #1e2a33;
+            padding:0;
+        }
+        .tm-nav {
+            display:flex;
+            align-items:center;
+            gap:2rem;
+            padding:10px 36px;
+        }
+        .tm-logo img {
+            height:34px;
+            display:block;
+        }
+        .tm-menu {
+            display:flex;
+            gap:1.25rem;
+            margin-left:auto;
+        }
+        .tm-menu-item {
+            color:#fff;
+            font-weight:600;
+            font-size:.9rem;
+            text-transform:uppercase;
+            letter-spacing:.5px;
+        }
+        .tm-menu-item:hover { color:var(--tm-blue); }
+        /* Search + categories bar */
+        .tm-global-bar {
+            background:var(--tm-dark-alt);
+            padding:12px 36px 16px;
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+        }
+        .tm-search {
+            display:flex;
+            gap:8px;
+            width:100%;
+        }
+        .tm-search input {
+            flex:1;
+            background:#1c2730;
+            border:1px solid #2d3a44;
+            color:#fff;
+            padding:12px 16px;
+            border-radius:4px;
+            font-size:.95rem;
+        }
+        .tm-search input::placeholder { color:#7c8b95; }
+        .tm-search button {
+            background:var(--tm-blue);
+            background-color: #024DDF;
+            border:none;
+            color:#FFF;
+            font-weight:700;
+            padding:0 22px;
+            border-radius:4px;
+            cursor:pointer;
+        }
+        .tm-search button:hover {filter:brightness(1.1); }
+        .tm-cat-nav {
+            display:flex;
+            gap:24px;
+            flex-wrap:wrap;
+        }
+        .tm-cat-nav a {
+            color:#d0d8de;
+            font-size:.8rem;
+            font-weight:600;
+            letter-spacing:.75px;
+            text-transform:uppercase;
+            text-decoration:none;
+        }
+        .tm-cat-nav a:hover { color:var(--tm-blue); }
+        /* Hero carousel */
+        .tm-hero {
+            position:relative;
+            min-height:420px;
+            background:#000;
+            overflow:hidden;
+            isolation: isolate;
+        }
+        .tm-carousel {
+            height:100%;
+            will-change: auto;
+        }
+        .tm-carousel-slides, .tm-slide, .tm-slide img {
+            height:100%;
+            width:100%;
+            object-fit:cover;
+        }
+        .tm-slide {
+            position:absolute;
+            inset:0;
+            opacity:0;
+            transition:opacity .6s ease;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+        .tm-slide.active { opacity:1; }
+        .tm-carousel-slides {
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+        }
+        .tm-hero::after {
+            content:"";
+            position:absolute;
+            inset:0;
+            background:linear-gradient(90deg, rgba(0,0,0,.75) 0%, rgba(0,0,0,.55) 40%, rgba(0,0,0,.15) 75%);
+            pointer-events:none;
+        }
+        .tm-hero-content {
+            position:absolute;
+            top:0;
+            left:0;
+            z-index:2;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            height:100%;
+            padding:0 60px;
+            max-width:640px;
+            color:#fff;
+        }
+        .tm-hero-title {
+            font-size:2.75rem;
+            line-height:1.1;
+            margin:0 0 12px;
+            font-weight:300;
+            letter-spacing:.5px;
+        }
+        .tm-hero-subtitle {
+            font-size:1.05rem;
+            color:#d5dde2;
+            margin:0 0 24px;
+        }
+        .tm-cta-banner {
+            background:rgba(15,31,41,.75);
+            backdrop-filter:blur(4px);
+            padding:16px 20px;
+            border-left:4px solid var(--tm-blue);
+            border-radius:4px;
+            font-size:.9rem;
+            line-height:1.4;
+        }
+        .tm-cta-banner strong { color:var(--tm-blue); }
+        .tm-carousel-button {
+            position:absolute;
+            top:50%;
+            transform:translateY(-50%);
+            z-index:3;
+            background:rgba(0,0,0,.55);
+            border:1px solid rgba(255,255,255,.2);
+            color:#fff;
+            width:44px;
+            height:44px;
+            border-radius:50%;
+            cursor:pointer;
+            font-size:1.25rem;
+            backdrop-filter:blur(2px);
+        }
+        .tm-carousel-button:hover { background:rgba(0,0,0,.8); }
+        .tm-carousel-button.prev { left:18px; }
+        .tm-carousel-button.next { right:18px; }
+        /* Events grid */
+        .tm-main {
+            padding:48px 60px 70px;
+        }
+        .tm-events-grid {
+            display:grid;
+            gap:28px;
+            grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+        }
+        .tm-event-card {
+            background:var(--tm-card);
+            border:1px solid #dbe2e8;
+            border-radius:8px;
+            display:flex;
+            flex-direction:column;
+            overflow:hidden;
+            position:relative;
+            box-shadow:0 2px 4px rgba(0,0,0,.04);
+            transition:box-shadow .25s, transform .25s;
+        }
+        .tm-event-card:hover {
+            box-shadow:0 6px 22px -4px rgba(0,0,0,.18);
+            transform:translateY(-2px);
+        }
+        .tm-event-card .img-skel {
+            aspect-ratio:16/9;
+            background:linear-gradient(120deg,#1f2c37 0%, #24323e 40%, #1f2c37 80%);
+            position:relative;
+        }
+        /* Added: event images inside skeleton container */
+        .tm-event-card .img-skel img {
+            position:absolute;
+            inset:0;
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            display:block;
+            filter:brightness(.92);
+        }
+        .tm-event-card .img-skel img.lazy-fallback {
+            object-fit:contain;
+            padding:14px;
+            background:#0f1c24;
+        }
+        .tm-event-card .date {
+            position:absolute;
+            top:10px;
+            left:10px;
+            background:#000;
+            color:#fff;
+            font-size:.7rem;
+            font-weight:700;
+            letter-spacing:.5px;
+            padding:6px 8px;
+            border-radius:4px;
+        }
+        .tm-event-card .info {
+            padding:14px 16px 18px;
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            flex:1;
+        }
+        .tm-event-card h3 {
+            font-size:1rem;
+            margin:0;
+            font-weight:700;
+            line-height:1.25;
+            color:#0b1c24;
+        }
+        .tm-event-card .venue {
+            font-size:.75rem;
+            letter-spacing:.3px;
+            text-transform:uppercase;
+            color:#4f636e;
+            margin:0 0 6px;
+        }
+        .btn-tickets {
+            align-self:flex-start;
+            background:var(--tm-blue);
+            background-color: #024DDF;
+            border:none;
+            color:#FFF;
+            font-weight:700;
+            font-size:.75rem;
+            letter-spacing:.75px;
+            padding:9px 14px 8px;
+            border-radius:4px;
+            cursor:pointer;
+            text-transform:uppercase;
+            margin-top:auto;
+        }
+        .btn-tickets:hover { filter:brightness(1.07); }
+        /* Footer */
+        .tm-footer {
+            background:var(--tm-dark);
+            color:#8fa1ad;
+            padding:36px 60px;
+            text-align:center;
+            font-size:.75rem;
+            border-top:1px solid #1e2a33;
+        }
+        /* Responsive */
+        @media (max-width:900px){
+            .tm-nav { padding:10px 20px; }
+            .tm-global-bar { padding:12px 20px 18px; }
+            .tm-hero-content { padding:0 28px; }
+            .tm-main { padding:42px 28px 60px; }
+            .tm-hero-title { font-size:2.1rem; }
+        }
+        @media (max-width:600px){
+            .tm-search { flex-direction:column; }
+            .tm-search button { height:46px; }
+            .tm-cat-nav { gap:14px; }
+        }
+    </style>
+</head>
+<body class="ticketmaster-theme">
+    <!-- Header Navigation -->
+    <header class="tm-header">
+        <div class="tm-nav">
+            <div class="tm-logo">
+                <!-- Updated src path -->
+                <img id="tmLogo" src="assets/ticketmaster_logo.png" alt="Ticketmaster" width="140" height="34" loading="lazy" style="object-fit:contain; background:transparent; filter:brightness(0) saturate(100%) invert(21%) sepia(98%) saturate(3527%) hue-rotate(212deg) brightness(95%) contrast(101%);">
+            </div>
+            <nav class="tm-menu">
+                <a href="#" class="tm-menu-item">Concerts</a>
+                <a href="#" class="tm-menu-item">Sports</a>
+                <a href="#" class="tm-menu-item">Arts & Theater</a>
+                <a href="#" class="tm-menu-item">Family</a>
+            </nav>
+        </div>
+        <div class="tm-global-bar">
+            <div class="tm-search">
+                <input type="text" placeholder="Search for events, artists, teams or venues">
+                <button>Search</button>
+            </div>
+            <nav class="tm-cat-nav">
+                <a href="#">Music</a>
+                <a href="#">Pop</a>
+                <a href="#">Rock</a>
+                <a href="#">Hip-Hop</a>
+                <a href="#">Comedy</a>
+                <a href="#">Festivals</a>
+                <a href="#">NBA</a>
+                <a href="#">NFL</a>
+                <a href="#">NHL</a>
+                <a href="#">More</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section with Carousel -->
+    <section class="tm-hero">
+        <div class="tm-carousel">
+            <div class="tm-carousel-slides">
+                <div class="tm-slide active">
+                    <img src="assets/images/hero/image1.jpg" alt="Slide 1" data-generated="true">
+                </div>
+                <div class="tm-slide">
+                    <img src="assets/images/hero/image2.jpg" alt="Slide 2" data-generated="true">
+                </div>
+                <div class="tm-slide">
+                    <img src="assets/images/hero/image3.jpg" alt="Slide 3" data-generated="true">
+                </div>
+            </div>
+            <button class="tm-carousel-button prev" onclick="prevSlide()">&#10094;</button>
+            <button class="tm-carousel-button next" onclick="nextSlide()">&#10095;</button>
+        </div>
+        <div class="tm-hero-content">
+            <h1 class="tm-hero-title">Discover Live Events Near You</h1>
+            <p class="tm-hero-subtitle">Concerts, sports, theater & more. Secure tickets with Amelia assisted browsing.</p>
+            <div class="tm-cta-banner">
+                <strong>Try the chat widget.</strong> Ask for events, artists, or venues and see AI-powered assistance.
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="tm-main">
+        <div class="tm-events-grid">
+            <div class="tm-event-card">
+                <div class="img-skel">
+                    <span class="date">OCT 12</span>
+                    <img src="assets/images/events/luminary-tour.jpg"
+                         alt="Moody stage lighting with vibrant neo-blue and amber beams over indie singer performing - The Luminary Tour"
+                         loading="lazy" data-generated="true"
+                         data-prompt="Wide angle photograph, atmospheric indie concert, ethereal lighting, teal and amber beams, subtle crowd silhouettes, crisp professional look, no text, evening indoor arena">
+                </div>
+                <div class="info">
+                    <h3>The Luminary Tour 2025</h3>
+                    <p class="venue">Grand Arena • Raleigh, NC</p>
+                    <button class="btn-tickets">See Tickets</button>
+                </div>
+            </div>
+            <div class="tm-event-card">
+                <div class="img-skel">
+                    <span class="date">OCT 18</span>
+                    <img src="assets/images/events/championship-hockey.jpg"
+                         alt="Dynamic action shot of pro hockey goalie blocking a puck under stadium lights"
+                         loading="lazy" data-generated="true"
+                         data-prompt="High-energy professional ice hockey action, goalie save, crisp ice reflections, motion particles, cinematic lighting, no logos, no text">
+                </div>
+                <div class="info">
+                    <h3>Championship Hockey Night</h3>
+                    <p class="venue">Metro Center • Durham, NC</p>
+                    <button class="btn-tickets">See Tickets</button>
+                </div>
+            </div>
+            <div class="tm-event-card">
+                <div class="img-skel">
+                    <span class="date">OCT 21</span>
+                    <img src="assets/images/events/late-night-comedy.jpg"
+                         alt="Stand-up comedian on small club stage with warm spotlight and audience silhouettes"
+                         loading="lazy" data-generated="true"
+                         data-prompt="Intimate comedy club, single performer mid-joke, warm tungsten spotlight, soft audience blur, cinematic shallow depth, no text">
+                </div>
+                <div class="info">
+                    <h3>Comedy Live: Late Night Laughs</h3>
+                    <p class="venue">Civic Theater • Cary, NC</p>
+                    <button class="btn-tickets">See Tickets</button>
+                </div>
+            </div>
+            <div class="tm-event-card">
+                <div class="img-skel">
+                    <span class="date">OCT 27</span>
+                    <img src="assets/images/events/fall-indie-fest.jpg"
+                         alt="Outdoor autumn indie music festival at golden hour with crowd and rustic stage"
+                         loading="lazy" data-generated="true"
+                         data-prompt="Outdoor fall indie music festival, warm golden hour light, soft foliage oranges and ambers, modest stage, dreamy haze, no text, no prominent branding">
+                </div>
+                <div class="info">
+                    <h3>Fall Indie Fest 2025</h3>
+                    <p class="venue">Riverfront Park • Durham, NC</p>
+                    <button class="btn-tickets">See Tickets</button>
+                </div>
+            </div>
+            <div class="tm-event-card">
+                <div class="img-skel">
+                    <span class="date">NOV 02</span>
+                    <img src="assets/images/events/pro-basketball-showdown.jpg"
+                         alt="Intense moment in professional basketball game with players leaping near hoop"
+                         loading="lazy" data-generated="true"
+                         data-prompt="Professional basketball arena, two players mid-air contest near rim, dynamic lighting, subtle motion blur, crisp detail, no logos, no text">
+                </div>
+                <div class="info">
+                    <h3>Pro Basketball Showdown</h3>
+                    <p class="venue">Downtown Arena • Raleigh, NC</p>
+                    <button class="btn-tickets">See Tickets</button>
+                </div>
+            </div>
+            <div class="tm-event-card">
+                <div class="img-skel">
+                    <span class="date">NOV 09</span>
+                    <img src="assets/images/events/symphony-modern-classics.jpg"
+                         alt="Elegant symphony orchestra performing under cool blue and soft white lights"
+                         loading="lazy" data-generated="true"
+                         data-prompt="Modern symphony orchestra performance, wide angle, cool blue accent lighting with soft white highlights, refined atmosphere, no text">
+                </div>
+                <div class="info">
+                    <h3>Symphony Nights: Modern Classics</h3>
+                    <p class="venue">Symphony Hall • Durham, NC</p>
+                    <button class="btn-tickets">See Tickets</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="tm-footer">
+        <div class="tm-footer-content">
+            <p>&copy; 2025 Ticketmaster Mock • Demo Experience • Amelia Integration Preview</p>
+        </div>
+    </footer>
+
+    <!-- Amelia Chat Overlay Script -->
+    <script type="text/javascript" src="https://ticketmaster.agentics.sandbox.amelia.com/Amelia/ui/ticketmaster/assets/amelia.js"></script>
+    <script src="src/js/carousel.js"></script>
+    <!-- Logo path auto-detect fallback -->
+    <script>
+    (function(){
+        const el = document.getElementById('tmLogo');
+        if(!el) return;
+        const tried = new Set();
+        const candidates = [
+            'assets/ticketmaster_logo.png', // actual location
+            'assets/images/ticketmaster_logo.png',
+            '../ticketmaster_logo.png',
+            './ticketmaster_logo.png'
+        ];
+        function testPath(i){
+            if(i >= candidates.length){
+                console.warn('Logo not found in tested paths:', Array.from(tried));
+                el.alt = 'Ticketmaster (logo missing)';
+                el.style.background = '#0A0A0A';
+                el.style.color = '#00B2FF';
+                el.style.display = 'flex';
+                el.style.alignItems = 'center';
+                el.style.justifyContent = 'center';
+                el.style.font = '600 12px/1 Open Sans, Arial, sans-serif';
+                el.removeAttribute('src');
+                el.textContent = 'Ticketmaster';
+                return;
+            }
+            const path = candidates[i];
+            tried.add(path);
+            const img = new Image();
+            img.onload = () => { el.src = path; console.info('Loaded logo from', path); };
+            img.onerror = () => testPath(i+1);
+            img.src = path + '?v=' + Date.now();
+        }
+        el.addEventListener('error', () => testPath(0), { once:true });
+    })();
+    </script>
+    <!-- Added: graceful fallback + optional generation hook -->
+    <script>
+    (function(){
+        const imgs = document.querySelectorAll('.tm-event-card .img-skel img');
+        imgs.forEach(img => {
+            img.addEventListener('error', () => {
+                // Canvas placeholder with title from sibling heading
+                try {
+                    const card = img.closest('.tm-event-card');
+                    const title = card?.querySelector('h3')?.textContent?.trim() || 'Live Event';
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 640; canvas.height = 360;
+                    const ctx = canvas.getContext('2d');
+                    const g = ctx.createLinearGradient(0,0,640,360);
+                    g.addColorStop(0,'#0d2230'); g.addColorStop(1,'#16445d');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(0,0,640,360);
+                    ctx.fillStyle = '#00B2FF';
+                    ctx.font = '700 34px Open Sans, Arial';
+                    ctx.fillText(title.slice(0,32), 32, 120);
+                    ctx.font = '400 16px Open Sans, Arial';
+                    ctx.fillStyle = '#b7c8d3';
+                    ctx.fillText('Image pending', 32, 160);
+                    img.src = canvas.toDataURL('image/png');
+                    img.classList.add('lazy-fallback');
+                } catch(e){
+                    console.warn('Fallback failed', e);
+                }
+            }, { once:true });
+        });
+
+        // Optional: expose prompts for external generator integration
+        window.getEventImagePrompts = () =>
+            Array.from(imgs).map(i => ({
+                src:i.getAttribute('src'),
+                prompt:i.dataset.prompt,
+                alt:i.alt
+            }));
+        // Example integration hook (commented):
+        /*
+        async function generateMissingImages(apiEndpoint){
+            for(const i of imgs){
+                if(i.classList.contains('lazy-fallback')){
+                    const prompt = i.dataset.prompt;
+                    const res = await fetch(apiEndpoint, {
+                        method:'POST',
+                        headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({ prompt, aspect:'16:9' })
+                    });
+                    if(res.ok){
+                        const { imageDataUrl } = await res.json();
+                        i.src = imageDataUrl;
+                        i.classList.remove('lazy-fallback');
+                    }
+                }
+            }
+        }
+        */
+    })();
+    </script>
+</body>
+</html>
